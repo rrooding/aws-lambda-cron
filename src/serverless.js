@@ -4,7 +4,7 @@ const { Component } = require("@serverless/core");
 const aws = require("@serverless/aws-sdk-extra");
 const fs = require("fs");
 
-const { createOrUpdateMetaRole } = require("./utils");
+const { createOrUpdateMetaRole, getVpcConfig } = require("./utils");
 
 class LambdaCron extends Component {
   validate(inputs) {
@@ -95,6 +95,9 @@ class LambdaCron extends Component {
       roleArn = await extras.deployRole(roleParams).roleArn;
       this.state.roleName = roleParams.roleName;
     }
+
+    const vpcConfig = getVpcConfig(inputs.vpc);
+
     const lambdaParams = {
       lambdaName: `${inputs.name}-lambda`, // required
       roleArn,
@@ -102,7 +105,8 @@ class LambdaCron extends Component {
       memory: inputs.memory || 512,
       timeout: inputs.timeout || 60,
       env: inputs.env,
-      layers: inputs.layers || []
+      layers: inputs.layers || [],
+      vpcConfig: vpcConfig,
     };
 
     const { lambdaArn, lambdaSize, lambdaSha } = await extras.deployLambda(
